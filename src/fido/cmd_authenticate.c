@@ -37,7 +37,16 @@ int cmd_authenticate(void) {
     if (P1(apdu) != CTAP_AUTH_ENFORCE && P1(apdu) != CTAP_AUTH_CHECK_ONLY) {
         return SW_INCORRECT_P1P2();
     }
-    if ((get_opts() & FIDO2_OPT_AUV) || (file_has_data(ef_pin) && !keydev_unlocked)) {
+    /* U2F has no user verification, so alwaysUv rules it out permanently. Say so with
+       a terminal status: in U2F, 0x6985 means "user has not touched the key yet, try
+       again", and a client will retry until it gives up. Observed in the upstream
+       suite as an infinite CTAPHID_MSG loop rather than a clean failure.
+       0x6D00 tells the client this instruction is simply not supported. */
+    if (get_opts() & FIDO2_OPT_AUV) {
+        return SW_INS_NOT_SUPPORTED();
+    }
+    /* A locked key device is transient - retrying is the right advice here. */
+    if (file_has_data(ef_pin) && !keydev_unlocked) {
         return SW_CONDITIONS_NOT_SATISFIED();
     }
     if (P1(apdu) == CTAP_AUTH_ENFORCE && wait_button_pressed() > 0) {

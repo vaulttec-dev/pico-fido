@@ -63,6 +63,13 @@ int cmd_register(void) {
     if (apdu.nc != CTAP_APPID_SIZE + CTAP_CHAL_SIZE) {
         return SW_WRONG_LENGTH();
     }
+    /* Refuse U2F registration under alwaysUv for the same reason authentication is
+       refused. Without this the key hands out a credential it will never authenticate
+       with, and the user only finds out at the next login. Terminal status, not 0x6985:
+       see the note in cmd_authenticate.c. */
+    if (get_opts() & FIDO2_OPT_AUV) {
+        return SW_INS_NOT_SUPPORTED();
+    }
     if (wait_button_pressed() > 0) {
         return SW_CONDITIONS_NOT_SATISFIED();
     }
