@@ -2,3 +2,13 @@ build*/
 *__pycache__*
 legacy/
 
+# ESP-IDF leaves these in the project root. Untracked files here make the whole
+# submodule read as dirty in the parent repository, which hides real changes.
+sdkconfig
+sdkconfig.old
+managed_components/
+dependencies.lock
+
+# Written by the host emulator during tests.
+memory.flash
+
