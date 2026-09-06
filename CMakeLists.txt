@@ -90,6 +90,11 @@ configure_bool_option(
 if(FORBID_DISABLE_AUV)
     add_compile_definitions(FORBID_DISABLE_AUV=1)
 endif()
+# Value passthrough, not a boolean flag: -DDEFAULT_ALWAYS_UV=0 has to reach the
+# compiler as 0, so `if(...)` would swallow exactly the case we need.
+if(DEFINED DEFAULT_ALWAYS_UV)
+    add_compile_definitions(DEFAULT_ALWAYS_UV=${DEFAULT_ALWAYS_UV})
+endif()
 if(DEFAULT_MCUV_NOT_REQUIRED)
     add_compile_definitions(DEFAULT_MCUV_NOT_REQUIRED=1)
 endif()

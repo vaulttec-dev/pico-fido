@@ -599,8 +599,21 @@ uint32_t get_sign_counter(void) {
    leaves alwaysUv off and lets an RP settle for user presence alone. This product
    requires user verification on every operation, so AUV is the factory default.
    An explicit value written by authenticatorConfig still wins: once EF_OPTS holds
-   data, that data is returned as-is, including a deliberate 0. */
+   data, that data is returned as-is, including a deliberate 0.
+
+   Build with -DDEFAULT_ALWAYS_UV=0 to get upstream's default back. That is what the
+   upstream pytest suite needs: it assumes a device that registers and asserts without
+   a PIN, so with AUV on roughly 90 of its tests fail by design and it stops being
+   useful as a regression net. */
+#ifndef DEFAULT_ALWAYS_UV
+#define DEFAULT_ALWAYS_UV 1
+#endif
+
+#if DEFAULT_ALWAYS_UV
 #define DEFAULT_OPTS FIDO2_OPT_AUV
+#else
+#define DEFAULT_OPTS 0
+#endif
 
 uint8_t get_opts(void) {
     file_t *ef = file_search_by_fid(EF_OPTS, NULL, SPECIFY_EF);
