@@ -1,10 +1,10 @@
 {
   "legalHeader": "Submission of this statement and retrieval and use of this statement indicates acceptance of the appropriate agreement located at https://fidoalliance.org/metadata/metadata-legal-terms/.",
-  "description": "Pico FIDO Authenticator",
+  "description": "vaulttecdev Security Key",
   "friendlyNames": {
-    "en-US": "Pico Keys"
+    "en-US": "vaulttecdev"
   },
-  "aaguid": "89fb94b7-06c9-3673-9b7e-30526d968145",
+  "aaguid": "1c9bb147-796e-4a19-b28c-9752b34a96ef",
   "protocolFamily": "fido2",
   "schema": 3,
   "authenticatorVersion": 2048,
@@ -85,10 +85,10 @@
       "thirdPartyPayment",
       "pinComplexityPolicy"
     ],
-    "aaguid": "89fb94b706c936739b7e30526d968145",
+    "aaguid": "1c9bb147796e4a19b28c9752b34a96ef",
     "options": {
       "rk": true,
-      "alwaysUv": false,
+      "alwaysUv": true,
       "credMgmt": true,
       "authnrCfg": true,
       "clientPin": false,

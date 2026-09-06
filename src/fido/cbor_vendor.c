@@ -271,7 +271,9 @@ static int cbor_vendor_generic(uint8_t cmd, const uint8_t *data, size_t len) {
             }
             mbedtls_x509write_csr ctx;
             mbedtls_x509write_csr_init(&ctx);
-            snprintf((char *) buffer, sizeof(buffer), "C=ES,O=Pico Keys,OU=Authenticator Attestation,CN=Pico Fido EE Serial %s", pico_serial_str);
+            /* Subject DN of the enterprise attestation CSR. See the note in
+               x509_create_cert(): no C= until a legal entity exists. */
+            snprintf((char *) buffer, sizeof(buffer), "O=vaulttecdev,OU=Authenticator Attestation,CN=vaulttecdev EE Serial %s", pico_serial_str);
             mbedtls_x509write_csr_set_subject_name(&ctx, (char *) buffer);
             mbedtls_pk_context key;
             mbedtls_pk_init(&key);

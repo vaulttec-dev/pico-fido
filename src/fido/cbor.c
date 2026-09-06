@@ -32,7 +32,11 @@ const bool _btrue = true, _bfalse = false;
 
 int cbor_get_assertion(const uint8_t *data, size_t len, bool next);
 
-const uint8_t aaguid[16] = { 0x89, 0xFB, 0x94, 0xB7, 0x06, 0xC9, 0x36, 0x73, 0x9B, 0x7E, 0x30, 0x52, 0x6D, 0x96, 0x81, 0x45 }; // First 16 bytes of SHA256("Pico FIDO2")
+// AAGUID ідентифікує МОДЕЛЬ автентифікатора, а не екземпляр. Один на всю лінійку,
+// однаковий на всіх пристроях, НЕЗМІННИЙ назавжди: реєстрації в RP прив'язані до нього,
+// а зміна виглядатиме як підміна пристрою.
+// Випадковий UUIDv4: 1c9bb147-796e-4a19-b28c-9752b34a96ef
+const uint8_t aaguid[16] = { 0x1C, 0x9B, 0xB1, 0x47, 0x79, 0x6E, 0x4A, 0x19, 0xB2, 0x8C, 0x97, 0x52, 0xB3, 0x4A, 0x96, 0xEF };
 
 static const uint8_t *volatile cbor_data = NULL;
 static volatile size_t cbor_len = 0;

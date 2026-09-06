@@ -1,0 +1,35 @@
+# vaulttecdev overrides on top of pico-keys-sdk/config/esp32/sdkconfig.defaults
+#
+# Kept in a separate file so the upstream defaults (which live in a submodule)
+# stay untouched. Chained via SDKCONFIG_DEFAULTS in tools/build.sh - ours is
+# second, so it wins.
+#
+# NOTE: USB VID/PID are NOT set here. The upstream CONFIG_TINYUSB_DESC_CUSTOM_VID
+# path does not work: CONFIG_* only exist after project(), while CMakeLists.txt
+# assigns USB_VID before that. They are passed as -DUSB_VID/-DUSB_PID from
+# tools/build.sh instead.
+
+# --- Release, not development -------------------------------------------------
+#
+# Kill the console outright. This is not belt-and-braces on top of the log level:
+# pico-keys-sdk calls printf() unconditionally in hid.c (136, 296, 421, 422), so
+# every CTAPHID command code and length is written out. LOG_DEFAULT_LEVEL_NONE only
+# silences ESP_LOG*, it does nothing to printf, and the console is otherwise wired
+# to both UART0 and the built-in USB-Serial-JTAG. Guarding those printf() calls
+# would mean patching the submodule; removing the sink does not.
+#
+# For bring-up and debugging use DEV=1 ./tools/build.sh, which chains
+# sdkconfig.dev and puts the console back.
+CONFIG_ESP_CONSOLE_NONE=y
+CONFIG_BOOTLOADER_LOG_LEVEL_NONE=y
+CONFIG_LOG_DEFAULT_LEVEL_NONE=y
+
+# Do not dump a panic handler to the console
+CONFIG_ESP_SYSTEM_PANIC_SILENT_REBOOT=y
+
+# Upstream enables CONFIG_ESP_COREDUMP_ENABLE_TO_UART. A coredump is a snapshot of
+# RAM, which on this device includes key material in flight.
+CONFIG_ESP_COREDUMP_ENABLE_TO_NONE=y
+
+# --- Size ---------------------------------------------------------------------
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y

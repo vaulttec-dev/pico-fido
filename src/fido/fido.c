@@ -95,7 +95,24 @@ static int fido_select(app_t *a, uint8_t force) {
 extern uint8_t (*get_version_major)(void);
 extern uint8_t (*get_version_minor)(void);
 
+/* Branding shown by the OS in the USB device descriptor. */
+#define VAULTTEC_MANUFACTURER "vaulttecdev"
+#define VAULTTEC_PRODUCT      "vaulttecdev Security Key"
+
+#if !defined(ENABLE_EMULATION)
+/* Defined in pico-keys-sdk/src/usb/usb_descriptors.c. Index 1 is the manufacturer
+   and index 2 the product; the SDK hardcodes its own names there and never exposes
+   the manufacturer through phy, so we retarget the pointers here instead of forking
+   the SDK. Runs before main(), therefore before usb_init() reads the table.
+   Commissioning can still override the product name via phy_data.usb_product. */
+extern const char *string_desc_arr[];
+#endif
+
 INITIALIZER ( fido_ctor ) {
+#if !defined(ENABLE_EMULATION)
+    string_desc_arr[1] = VAULTTEC_MANUFACTURER;
+    string_desc_arr[2] = VAULTTEC_PRODUCT;
+#endif
 #if defined(USB_ITF_CCID) || defined(ENABLE_EMULATION)
     ccid_atr = atr_fido;
 #endif
@@ -201,8 +218,12 @@ static int x509_create_cert(mbedtls_ecdsa_context *ecdsa, uint8_t *buffer, size_
     mbedtls_x509write_crt_init(&ctx);
     mbedtls_x509write_crt_set_version(&ctx, MBEDTLS_X509_CRT_VERSION_3);
     mbedtls_x509write_crt_set_validity(&ctx, "20220901000000", "20720831235959");
-    mbedtls_x509write_crt_set_issuer_name(&ctx, "C=ES,O=Pico HSM,CN=Pico FIDO");
-    mbedtls_x509write_crt_set_subject_name(&ctx, "C=ES,O=Pico HSM,CN=Pico FIDO");
+    /* This DN travels inside the attestation object every relying party receives,
+       so it must not claim to be someone else. No C= until there is a registered
+       legal entity behind the product: omitting the country is honest, asserting
+       the wrong one is not. */
+    mbedtls_x509write_crt_set_issuer_name(&ctx, "O=vaulttecdev,CN=vaulttecdev Security Key");
+    mbedtls_x509write_crt_set_subject_name(&ctx, "O=vaulttecdev,CN=vaulttecdev Security Key");
     uint8_t serial[16];
     random_fill_buffer(BYTE_ARRAY(serial, sizeof(serial)));
     mbedtls_x509write_crt_set_serial_raw(&ctx, serial, sizeof(serial));
@@ -574,12 +595,19 @@ uint32_t get_sign_counter(void) {
     return get_uint32_le(caddr);
 }
 
+/* Options for a device that has never been configured. Upstream returns 0, which
+   leaves alwaysUv off and lets an RP settle for user presence alone. This product
+   requires user verification on every operation, so AUV is the factory default.
+   An explicit value written by authenticatorConfig still wins: once EF_OPTS holds
+   data, that data is returned as-is, including a deliberate 0. */
+#define DEFAULT_OPTS FIDO2_OPT_AUV
+
 uint8_t get_opts(void) {
     file_t *ef = file_search_by_fid(EF_OPTS, NULL, SPECIFY_EF);
     if (file_has_data(ef)) {
         return *file_get_data(ef);
     }
-    return 0;
+    return DEFAULT_OPTS;
 }
 
 void set_opts(uint8_t opts) {
